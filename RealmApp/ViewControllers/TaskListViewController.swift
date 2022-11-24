@@ -12,8 +12,6 @@ import RealmSwift
 class TaskListViewController: UITableViewController {
 
     private var taskLists: Results<TaskList>!
-    private var sortedTaskLists: [TaskList] = []
-    private var isAlphabetSorted = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -42,9 +40,7 @@ class TaskListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "TaskListCell", for: indexPath)
         var content = cell.defaultContentConfiguration()
-        let taskList = isAlphabetSorted
-        ? taskLists.sorted { $0.name < $1.name }[indexPath.row]
-        : taskLists.sorted { $0.date < $1.date }[indexPath.row]
+        let taskList = taskLists[indexPath.row]
         
         content.text = taskList.name
         content.secondaryText = "\(taskList.tasks.filter("isComplete = false").count)"
@@ -84,14 +80,17 @@ class TaskListViewController: UITableViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         guard let indexPath = tableView.indexPathForSelectedRow else { return }
         guard let tasksVC = segue.destination as? TasksViewController else { return }
-        let taskList = isAlphabetSorted
-        ? taskLists.sorted { $0.name < $1.name }[indexPath.row]
-        : taskLists.sorted { $0.date < $1.date }[indexPath.row]
+        let taskList = taskLists[indexPath.row]
         tasksVC.taskList = taskList
     }
 
     @IBAction func sortingList(_ sender: UISegmentedControl) {
-        isAlphabetSorted = sender.selectedSegmentIndex == 1 ? true : false
+        switch sender.selectedSegmentIndex {
+        case 0:
+            taskLists = taskLists.sorted(byKeyPath: "date")
+        default:
+            taskLists = taskLists.sorted(byKeyPath: "name")
+        }
         tableView.reloadData()
     }
     
