@@ -72,10 +72,7 @@ class TasksViewController: UITableViewController {
         
         let doneAction = UIContextualAction(style: .normal, title: "Done") { _, _, isDone in
             StorageManager.shared.done(task)
-            self.currentTasks = self.taskList.tasks.filter("isComplete = false")
-            self.completedTasks = self.taskList.tasks.filter("isComplete = true")
-            tableView.reloadData()
-//            tableView.moveRow(at: indexPath, to: IndexPath(row: 0, section: 0))
+            tableView.moveRow(at: indexPath, to: IndexPath(row: 0, section: 1))
             isDone(true)
         }
         

@@ -42,7 +42,10 @@ class TaskListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "TaskListCell", for: indexPath)
         var content = cell.defaultContentConfiguration()
-        let taskList = isAlphabetSorted ? sortedTaskLists[indexPath.row] : taskLists[indexPath.row]
+        let taskList = isAlphabetSorted
+        ? taskLists.sorted { $0.name < $1.name }[indexPath.row]
+        : taskLists.sorted { $0.date < $1.date }[indexPath.row]
+        
         content.text = taskList.name
         content.secondaryText = "\(taskList.tasks.filter("isComplete = false").count)"
         cell.contentConfiguration = content
@@ -81,19 +84,14 @@ class TaskListViewController: UITableViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         guard let indexPath = tableView.indexPathForSelectedRow else { return }
         guard let tasksVC = segue.destination as? TasksViewController else { return }
-        let taskList = isAlphabetSorted ? sortedTaskLists[indexPath.row] : taskLists[indexPath.row]
+        let taskList = isAlphabetSorted
+        ? taskLists.sorted { $0.name < $1.name }[indexPath.row]
+        : taskLists.sorted { $0.date < $1.date }[indexPath.row]
         tasksVC.taskList = taskList
     }
 
     @IBAction func sortingList(_ sender: UISegmentedControl) {
-        if sender.selectedSegmentIndex == 1 {
-            isAlphabetSorted = true
-            sortedTaskLists = taskLists.sorted { taskList1, taskList2 in
-                taskList1.name < taskList2.name
-            }
-        } else {
-            isAlphabetSorted = false
-        }
+        isAlphabetSorted = sender.selectedSegmentIndex == 1 ? true : false
         tableView.reloadData()
     }
     
