@@ -13,13 +13,9 @@ import RealmSwift
 class TasksViewController: UITableViewController {
     
     var taskList: TaskList!
-    var delegate: TaskViewDelegate!
+
     
-    private var currentTasks: Results<Task>! {
-        didSet {
-            delegate.getCurrentTasks(count: currentTasks.count)
-        }
-    }
+    private var currentTasks: Results<Task>!
     private var completedTasks: Results<Task>!
 
     override func viewDidLoad() {
@@ -76,7 +72,10 @@ class TasksViewController: UITableViewController {
         
         let doneAction = UIContextualAction(style: .normal, title: "Done") { _, _, isDone in
             StorageManager.shared.done(task)
-            tableView.reloadRows(at: [indexPath], with: .automatic)
+            self.currentTasks = self.taskList.tasks.filter("isComplete = false")
+            self.completedTasks = self.taskList.tasks.filter("isComplete = true")
+            tableView.reloadData()
+//            tableView.moveRow(at: indexPath, to: IndexPath(row: 0, section: 0))
             isDone(true)
         }
         

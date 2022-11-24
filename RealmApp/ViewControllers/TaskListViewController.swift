@@ -9,14 +9,11 @@
 import UIKit
 import RealmSwift
 
-protocol TaskViewDelegate {
-    func getCurrentTasks(count: Int)
-}
-
 class TaskListViewController: UITableViewController {
 
     private var taskLists: Results<TaskList>!
-    private var currentTasksCount = 0
+    private var sortedTaskLists: [TaskList] = []
+    private var isAlphabetSorted = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -45,9 +42,9 @@ class TaskListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "TaskListCell", for: indexPath)
         var content = cell.defaultContentConfiguration()
-        let taskList = taskLists[indexPath.row]
+        let taskList = isAlphabetSorted ? sortedTaskLists[indexPath.row] : taskLists[indexPath.row]
         content.text = taskList.name
-        content.secondaryText = "\(taskList.tasks.count)"
+        content.secondaryText = "\(taskList.tasks.filter("isComplete = false").count)"
         cell.contentConfiguration = content
         return cell
     }
@@ -84,11 +81,20 @@ class TaskListViewController: UITableViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         guard let indexPath = tableView.indexPathForSelectedRow else { return }
         guard let tasksVC = segue.destination as? TasksViewController else { return }
-        let taskList = taskLists[indexPath.row]
+        let taskList = isAlphabetSorted ? sortedTaskLists[indexPath.row] : taskLists[indexPath.row]
         tasksVC.taskList = taskList
     }
 
     @IBAction func sortingList(_ sender: UISegmentedControl) {
+        if sender.selectedSegmentIndex == 1 {
+            isAlphabetSorted = true
+            sortedTaskLists = taskLists.sorted { taskList1, taskList2 in
+                taskList1.name < taskList2.name
+            }
+        } else {
+            isAlphabetSorted = false
+        }
+        tableView.reloadData()
     }
     
     @objc private func addButtonPressed() {
@@ -128,12 +134,5 @@ extension TaskListViewController {
             let rowIndex = IndexPath(row: taskLists.index(of: taskList) ?? 0, section: 0)
             tableView.insertRows(at: [rowIndex], with: .automatic)
         }
-    }
-}
-
-
-extension TaskListViewController: TaskViewDelegate {
-    func getCurrentTasks(count: Int) {
-        currentTasksCount = count
     }
 }
